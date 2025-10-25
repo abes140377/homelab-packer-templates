@@ -1,0 +1,15 @@
+[tools]
+packer = "latest"
+
+[env]
+_.file = [
+  { path = "{{env.HOME}}/.env", optional = true },
+  { path = ".env", optional = true },
+  { path = ".creds.env.yaml", redact = true }
+]
+_.path = [
+  "./scripts"
+]
+# Map PROXMOX_* environment variables to Packer's PKR_VAR_* format
+PKR_VAR_proxmox_user = "{{env.PROXMOX_USERNAME}}"
+PKR_VAR_proxmox_token = "{{env.PROXMOX_TOKEN}}"
