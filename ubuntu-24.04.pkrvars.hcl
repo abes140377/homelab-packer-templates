@@ -1,4 +1,3 @@
-# renovate: datasource=custom.ubuntuLinuxRelease
 vm_id         = 9002
 vm_os_family  = "linux"
 vm_os_name    = "ubuntu-server"

@@ -5,10 +5,10 @@ set -euo pipefail
 SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 
 # Default var files to use
-VAR_FILES=(
-  "my.pkrvars.hcl"
-  "ubuntu-24.04.pkrvars.hcl"
-)
+# VAR_FILES=(
+#   "my.pkrvars.hcl"
+#   "ubuntu-24.04.pkrvars.hcl"
+# )
 
 # Initialize Packer
 init_packer() {
@@ -18,7 +18,8 @@ init_packer() {
 
 # Validate Packer configuration
 validate_config() {
-  echo "Validating Packer configuration..."
+  VERSION=${1}
+  echo "Validating Packer configuration for ${VERSION}..."
 
   local var_file_args=()
   for var_file in "${VAR_FILES[@]}"; do
@@ -31,8 +32,9 @@ validate_config() {
 
 # Build Packer template
 build_template() {
-  FORCE_BUILD=${1:-""}
-  echo "Building Packer template $FORCE_BUILD..."
+  VERSION=${1}
+  FORCE_BUILD=${2:-""}
+  echo "Building Packer template ${VERSION} ${FORCE_BUILD}..."
 
   local var_file_args=()
   for var_file in "${VAR_FILES[@]}"; do
@@ -106,8 +108,12 @@ main() {
       validate_config
       ;;
     build)
-      validate_config
-      build_template $2
+      VAR_FILES=(
+        "my.pkrvars.hcl"
+        "ubuntu-${2}.pkrvars.hcl"
+      )
+      validate_config ${2}
+      build_template ${2} $3
       ;;
     "create-password")
       create_password $2

@@ -96,7 +96,6 @@ source "proxmox-iso" "vm" {
   boot_iso {
     iso_file         = "${var.iso_storage_pool}:iso/${var.iso_file}"
     iso_storage_pool = var.iso_storage_pool
-    # iso_checksum     = var.iso_checksum
     unmount          = var.iso_unmount
   }
 

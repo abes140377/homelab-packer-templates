@@ -16,7 +16,7 @@ _.path = [
 [hooks]
 enter = [
   'echo ""',
-  'echo "Setup $PROJECT_NAME project..."',
+  'echo "[MISE] Setup $PROJECT_NAME project..."',
   #
   'mise i -q',
   #
