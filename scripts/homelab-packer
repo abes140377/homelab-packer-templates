@@ -38,7 +38,7 @@ build_template() {
         var_file_args+=("-var-file=${var_file}")
     done
 
-    packer build "${var_file_args[@]}" .
+    packer build -force "${var_file_args[@]}" .
     echo "✓ Build complete"
 }
 

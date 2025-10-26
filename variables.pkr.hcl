@@ -1,3 +1,35 @@
+// Proxmox connection variables
+
+variable "proxmox_host" {
+  description = "IP and Port of the Proxmox host."
+  type        = string
+}
+
+variable "proxmox_user" {
+  description = "Username when authenticating to Proxmox, including the realm and token ID (e.g., user@pam!tokenid)."
+  type        = string
+}
+
+variable "proxmox_token" {
+  description = "API token for the Proxmox user."
+  type        = string
+}
+
+variable "proxmox_insecure_tls" {
+  description = "Skip validating the certificate."
+  type        = bool
+  default     = true
+}
+
+// Proxmox variables
+
+variable "node" {
+  description = "The name of the Proxmox Node on which to place the VM."
+  type        = string
+}
+
+// Virtual Machine variables
+
 variable "vmid" {
   description = "The ID used to reference the virtual machine. If not given, the next free ID on the node will be used."
   type        = number
@@ -15,9 +47,22 @@ variable "description" {
   default     = ""
 }
 
-variable "node" {
-  description = "The name of the Proxmox Node on which to place the VM."
+variable "vm_os_language" {
   type        = string
+  description = "The guest operating system language."
+  default     = "de_DE"
+}
+
+variable "vm_os_keyboard" {
+  type        = string
+  description = "The guest operating system keyboard layout."
+  default     = "de"
+}
+
+variable "vm_os_timezone" {
+  type        = string
+  description = "The guest operating system timezone."
+  default     = "Europe/Berlin"
 }
 
 variable "pool" {
@@ -152,37 +197,29 @@ variable "bios" {
   default     = "seabios"
 }
 
-
-
-
-
-
-variable "proxmox_host" {
-  description = "IP and Port of the Proxmox host."
-  type        = string
-}
-
-variable "proxmox_user" {
-  description = "Username when authenticating to Proxmox, including the realm and token ID (e.g., user@pam!tokenid)."
-  type        = string
-}
-
-variable "proxmox_token" {
-  description = "API token for the Proxmox user."
-  type        = string
-}
-
-variable "proxmox_insecure_tls" {
-  description = "Skip validating the certificate."
-  type        = bool
-  default     = true
-}
+# Proxmox connection variables
 
 variable "iso_download" {
   description = "Wether to download from iso_url or use the existing iso_file in the iso_storage_pool."
   type        = bool
   default     = true
 }
+
+# Cloud Init variables
+
+variable "cloud_init" {
+  description = "Wether to add a Cloud-Init CDROM drive after the virtual machine has been converted to a template."
+  type        = bool
+  default     = true
+}
+
+variable "cloud_init_storage_pool" {
+  description = "Name of the Proxmox storage pool to store the Cloud-Init CDROM on."
+  type        = string
+  default     = "local"
+}
+
+# ISO variables
 
 variable "iso_download_pve" {
   description = "Download the specified `iso_url` directly from the PVE node."
@@ -217,37 +254,6 @@ variable "iso_unmount" {
   default     = true
 }
 
-variable "cloud_init" {
-  description = "Wether to add a Cloud-Init CDROM drive after the virtual machine has been converted to a template."
-  type        = bool
-  default     = true
-}
-
-variable "cloud_init_storage_pool" {
-  description = "Name of the Proxmox storage pool to store the Cloud-Init CDROM on."
-  type        = string
-  default     = "local"
-}
-
-variable "additional_iso_files" {
-  description = "Additional ISO files attached to the virtual machine."
-  type = list(object({
-    iso_file     = string
-    iso_url      = string
-    iso_checksum = string
-  }))
-  default = []
-}
-
-variable "additional_cd_files" {
-  description = "Additional files attached to the virtual machine as iso."
-  type = list(object({
-    device = string
-    files  = list(string)
-  }))
-  default = []
-}
-
 variable "boot_command" {
   description = "The keys to type when the virtual machine is first booted in order to start the OS installer."
   type        = list(string)
@@ -271,6 +277,8 @@ variable "http_directory" {
   default     = "./http"
 }
 
+// Communicator Settings and Credentials
+
 variable "communicator" {
   description = "The packer communicator to use"
   type        = string
@@ -287,6 +295,13 @@ variable "ssh_password" {
   description = "The ssh password to connect to the guest"
   type        = string
   default     = "packer"
+  sensitive   = true
+}
+
+variable "ssh_password_encrypted" {
+  type        = string
+  description = "The encrypted password to login to the guest operating system."
+  default     = "$6$FhcddHFVZ7ABA4Gi$QybBjJXeTESb.NIDf7umP5rubBXM0N.SseGarXYz1kZpit8UgV6CVWo7ubIoacgdBEPUXTWXe92GyAVJ.jOJZ."
 }
 
 variable "ssh_timeout" {
@@ -295,28 +310,12 @@ variable "ssh_timeout" {
   default     = "30m"
 }
 
-variable "winrm_username" {
-  description = "The winrm username to connect to the guest"
-  type        = string
-  default     = "Administrator"
-}
+// Additional Settings
 
-variable "winrm_password" {
-  description = "The winrm password to connect to the guest"
-  type        = string
-  default     = "packer"
-}
-
-variable "winrm_insecure" {
-  description = "Skip validating the winrm ssl certificate."
-  type        = bool
-  default     = true
-}
-
-variable "winrm_use_ssl" {
-  description = "Use winrm ssl connection."
-  type        = bool
-  default     = false
+variable "additional_packages" {
+  type        = list(string)
+  description = "Additional packages to install."
+  default     = []
 }
 
 variable "provisioner" {
