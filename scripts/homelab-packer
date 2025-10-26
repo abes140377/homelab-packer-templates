@@ -6,95 +6,129 @@ SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 
 # Default var files to use
 VAR_FILES=(
-    "my.pkrvars.hcl"
-    "ubuntu-24.04.pkrvars.hcl"
+  "my.pkrvars.hcl"
+  "ubuntu-24.04.pkrvars.hcl"
 )
 
 # Initialize Packer
 init_packer() {
-    echo "Initializing Packer..."
-    packer init config.pkr.hcl
+  echo "Initializing Packer..."
+  packer init config.pkr.hcl
 }
 
 # Validate Packer configuration
 validate_config() {
-    echo "Validating Packer configuration..."
+  echo "Validating Packer configuration..."
 
-    local var_file_args=()
-    for var_file in "${VAR_FILES[@]}"; do
-        var_file_args+=("-var-file=${var_file}")
-    done
+  local var_file_args=()
+  for var_file in "${VAR_FILES[@]}"; do
+      var_file_args+=("-var-file=${var_file}")
+  done
 
-    packer validate "${var_file_args[@]}" .
-    echo "✓ Validation successful"
+  packer validate "${var_file_args[@]}" .
+  echo "✓ Validation successful"
 }
 
 # Build Packer template
 build_template() {
-    echo "Building Packer template..."
+  FORCE_BUILD=${1:-""}
+  echo "Building Packer template $FORCE_BUILD..."
 
-    local var_file_args=()
-    for var_file in "${VAR_FILES[@]}"; do
-        var_file_args+=("-var-file=${var_file}")
-    done
+  local var_file_args=()
+  for var_file in "${VAR_FILES[@]}"; do
+      var_file_args+=("-var-file=${var_file}")
+  done
 
-    packer build -force "${var_file_args[@]}" .
-    echo "✓ Build complete"
+  packer build -force "${var_file_args[@]}" .
+
+  echo "✓ Build complete"
+}
+
+create_password() {
+  local PASSWORD=$1
+
+  echo "Creating hashed password for $PASSWORD..."
+
+  # Use openssl to create a hashed password
+  HASHED_PASSWORD=$(openssl passwd -6 mein-passwort)
+
+  echo "✓ Password created.${HASHED_PASSWORD}"
+  echo "  ${HASHED_PASSWORD}"
+}
+
+create_ssh_key() {
+  local KEYNAME=$1
+  local EMAIL=$2
+
+  echo "Creating SSH key..."
+
+  mkdir -p keys
+  ssh-keygen -t ecdsa -b 256 -C "$EMAIL" -f "./keys/${KEYNAME}_id_ecdsa" -N ""
+
+  echo "✓ SSH key created at "
 }
 
 # Show usage information
 usage() {
-    cat << EOF
+  cat << EOF
 Usage: $(basename "$0") COMMAND
 
 Commands:
-    validate    Validate Packer configuration only
-    build       Validate and build Packer template
+  validate    Validate Packer configuration only
+  build       Validate and build Packer template
 
 Examples:
-    $(basename "$0") validate
-    $(basename "$0") build
+  $(basename "$0") validate
+  $(basename "$0") build
+  $(basename "$0") create-password <password>
+  $(basename "$0") create-ssh-key <keyname> <email>
 EOF
 }
 
 # Main execution
 main() {
-    # Navigate to the directory containing the Packer templates
-    cd "${SCRIPT_DIR}/.." || exit 1
+  # Navigate to the directory containing the Packer templates
+  cd "${SCRIPT_DIR}/.." || exit 1
 
-    # Initialize Packer first
-    init_packer
+  # Initialize Packer first
+  init_packer
 
-    # Check if argument is provided
-    if [[ $# -eq 0 ]]; then
-        echo "Error: Command argument is required" >&2
-        echo "" >&2
-        usage
-        exit 1
-    fi
+  # Check if argument is provided
+  if [[ $# -eq 0 ]]; then
+    echo "Error: Command argument is required" >&2
+    echo "" >&2
+    usage
+    exit 1
+  fi
 
-    case "${1}" in
-        validate)
-            validate_config
-            ;;
-        build)
-            validate_config
-            build_template
-            ;;
-        -h|--help|help)
-            usage
-            exit 0
-            ;;
-        *)
-            echo "Error: Unknown command '${1}'" >&2
-            echo "" >&2
-            usage
-            exit 1
-            ;;
-    esac
+  case "${1}" in
+    validate)
+      validate_config
+      ;;
+    build)
+      validate_config
+      build_template $2
+      ;;
+    "create-password")
+      create_password $2
+      ;;
+    "create-ssh-key")
+      create_ssh_key $2 $3
+      ;;
+    -h|--help|help)
+      usage
+      exit 0
+      ;;
+    *)
+      echo "Error: Unknown command '${1}'" >&2
+      echo "" >&2
+      usage
+      exit 1
+      ;;
+  esac
 }
 
 # Run main function if script is executed directly
 if [[ "${BASH_SOURCE[0]}" == "${0}" ]]; then
-    main "$@"
+  main "$@"
 fi

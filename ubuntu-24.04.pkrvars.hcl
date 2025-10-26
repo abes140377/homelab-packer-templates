@@ -1,10 +1,16 @@
 # renovate: datasource=custom.ubuntuLinuxRelease
-name           = "ubuntu-24.04-template"
-iso_file       = "ubuntu-24.04.3-live-server-amd64.iso"
-iso_url        = "https://releases.ubuntu.com/24.04/ubuntu-24.04.3-live-server-amd64.iso"
-iso_checksum   = "file:https://releases.ubuntu.com/24.04/SHA256SUMS"
-http_directory = "./http/ubuntu"
-boot_wait      = "5s"
+vm_id         = 9002
+vm_os_family  = "linux"
+vm_os_name    = "ubuntu-server"
+vm_os_version = "24.04"
+
+iso_file  = "ubuntu-24.04.3-live-server-amd64.iso"
+boot_wait = "5s"
+
+additional_packages = [
+  "qemu-guest-agent",
+]
+
 boot_command = [
   "c<wait> ",
   "linux /casper/vmlinuz --- autoinstall ds='nocloud-net;s=http://{{ .HTTPIP }}:{{ .HTTPPort }}/'",
@@ -14,6 +20,7 @@ boot_command = [
   "boot",
   "<enter>"
 ]
+
 provisioner = [
   "cloud-init clean",
   "rm /etc/cloud/cloud.cfg.d/*",

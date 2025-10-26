@@ -8,6 +8,13 @@ autoinstall:
     hostname: ubuntu
     username: ${build_username}
     password: ${build_password_encrypted}
+  users:
+    - name: ${admin_username}
+      groups: [sudo]
+      sudo: ["ALL=(ALL) NOPASSWD:ALL"]
+      ssh_authorized_keys:
+        - ${admin_public_key}
+        # - ecdsa-sha2-nistp256 AAAAE2VjZHNhLXNoYTItbmlzdHAyNTYAAAAIbmlzdHAyNTYAAABBBEpHmbodskMq1817IVscW7+0PL1E6w5ab/SnuZwekZwXyWTXQ11Om8PTUGCRHinUVjttosQUdJiVJ/t5aXSKP/I= packer@home.sflab.io
   network:
     network:
       version: 2
@@ -21,7 +28,9 @@ autoinstall:
     install-server: true
     allow-pw: true
   packages:
-    - qemu-guest-agent
+%{ for item in additional_packages ~}
+    - ${item}
+%{ endfor ~}
   user-data:
     disable_root: false
     timezone: ${vm_os_timezone}

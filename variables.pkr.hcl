@@ -5,6 +5,12 @@ variable "proxmox_host" {
   type        = string
 }
 
+variable "proxmox_port" {
+  description = "Port of the Proxmox host."
+  type        = string
+  default     = ""
+}
+
 variable "proxmox_user" {
   description = "Username when authenticating to Proxmox, including the realm and token ID (e.g., user@pam!tokenid)."
   type        = string
@@ -21,30 +27,32 @@ variable "proxmox_insecure_tls" {
   default     = true
 }
 
-// Proxmox variables
-
-variable "node" {
+variable "proxmox_node" {
   description = "The name of the Proxmox Node on which to place the VM."
   type        = string
 }
 
 // Virtual Machine variables
 
-variable "vmid" {
+variable "vm_id" {
   description = "The ID used to reference the virtual machine. If not given, the next free ID on the node will be used."
   type        = number
   default     = 0
 }
 
-variable "name" {
-  description = "The name of the VM within Proxmox."
+variable "vm_os_family" {
   type        = string
+  description = "The guest operating system family. Used for naming. (e.g. 'linux')"
 }
 
-variable "description" {
-  description = "The description of the VM. Shows as the 'Notes' field in the Proxmox GUI."
+variable "vm_os_name" {
   type        = string
-  default     = ""
+  description = "The guest operating system name. Used for naming. (e.g. 'ubuntu')"
+}
+
+variable "vm_os_version" {
+  type        = string
+  description = "The guest operating system version. Used for naming. (e.g. '22-04-lts')"
 }
 
 variable "vm_os_language" {
@@ -65,144 +73,137 @@ variable "vm_os_timezone" {
   default     = "Europe/Berlin"
 }
 
-variable "pool" {
+variable "vm_os_type" {
+  description = "The guest operating system type. (e.g. 'l26')"
+  type        = string
+  default     = "l26"
+}
+
+variable "vm_pool" {
   description = "The resource pool to which the VM will be added."
   type        = string
   default     = ""
 }
 
-variable "cpu_type" {
+variable "vm_cpu_type" {
   description = "The type of CPU to emulate in the Guest."
   type        = string
   default     = "host"
 }
 
-variable "cpu_sockets" {
+variable "vm_cpu_sockets" {
   description = "The number of CPU sockets to allocate to the VM."
   type        = number
   default     = 1
 }
 
-variable "cpu_cores" {
+variable "vm_cpu_cores" {
   description = "The number of CPU cores per CPU socket to allocate to the VM."
   type        = number
   default     = 2
 }
 
-variable "memory" {
+variable "vm_memory" {
   description = "The amount of memory to allocate to the VM in Megabytes."
   type        = number
   default     = 2048
 }
 
-variable "disk_storage_pool" {
+variable "vm_disk_storage_pool" {
   description = "The name of the storage pool on which to store the disks."
   type        = string
-  default     = "local"
+  default     = "local-lvm"
 }
 
-variable "disk_size" {
+variable "vm_disk_size" {
   description = "The size of the created disk."
   type        = string
   default     = "5G"
 }
 
-variable "disk_format" {
+variable "vm_disk_format" {
   description = "The drive's backing file's data format."
   type        = string
-  default     = "qcow2"
+  default     = "raw"
+  # default     = "qcow2"
 }
 
-variable "disk_type" {
+variable "vm_disk_type" {
   description = "The type of disk device to add."
   type        = string
   default     = "scsi"
 }
 
-variable "disk_cache" {
+variable "vm_disk_cache" {
   description = "The drive's cache mode."
   type        = string
   default     = "none"
 }
 
-variable "network_adapter" {
+variable "vm_network_adapter" {
   description = "Bridge to which the network device should be attached."
   type        = string
   default     = "vmbr0"
 }
 
-variable "network_adapter_model" {
+variable "vm_network_adapter_model" {
   description = "Network Card Model."
   type        = string
   default     = "virtio"
 }
 
-variable "network_adapter_mac" {
+variable "vm_network_adapter_mac" {
   description = "Override the randomly generated MAC Address for the VM."
   type        = string
   default     = null
 }
 
-variable "network_adapter_vlan" {
+variable "vm_network_adapter_vlan" {
   description = "The VLAN tag to apply to packets on this device."
   type        = number
   default     = -1
 }
 
-variable "network_adapter_firewall" {
+variable "vm_network_adapter_firewall" {
   description = "Whether to enable the Proxmox firewall on this network device."
   type        = bool
   default     = false
 }
 
-variable "vga_type" {
+variable "vm_vga_type" {
   description = "The type of display to virtualize."
   type        = string
   default     = "std"
 }
 
-variable "vga_memory" {
+variable "vm_vga_memory" {
   description = "Sets the VGA memory (in MiB)."
   type        = number
   default     = 32
 }
 
-variable "os" {
-  description = "The operating system."
-  type        = string
-  default     = "l26"
-}
-
-variable "scsi_controller" {
+variable "vm_scsi_controller" {
   description = "The SCSI controller model to emulate."
   type        = string
   default     = "virtio-scsi-pci"
 }
 
-variable "start_at_boot" {
+variable "vm_start_at_boot" {
   description = "Whether to have the VM startup after the PVE node starts."
   type        = bool
   default     = true
 }
 
-variable "qemu_agent" {
+variable "vm_qemu_agent" {
   description = "Whether to enable the QEMU Guest Agent. qemu-guest-agent daemon must run the in the quest."
   type        = bool
   default     = true
 }
 
-variable "bios" {
+variable "vm_bios" {
   description = "Set the machine bios."
   type        = string
   default     = "seabios"
-}
-
-# Proxmox connection variables
-
-variable "iso_download" {
-  description = "Wether to download from iso_url or use the existing iso_file in the iso_storage_pool."
-  type        = bool
-  default     = true
 }
 
 # Cloud Init variables
@@ -216,26 +217,10 @@ variable "cloud_init" {
 variable "cloud_init_storage_pool" {
   description = "Name of the Proxmox storage pool to store the Cloud-Init CDROM on."
   type        = string
-  default     = "local"
+  default     = "local-lvm"
 }
 
 # ISO variables
-
-variable "iso_download_pve" {
-  description = "Download the specified `iso_url` directly from the PVE node."
-  type        = bool
-  default     = false
-}
-
-variable "iso_url" {
-  description = "URL to the iso file."
-  type        = string
-}
-
-variable "iso_checksum" {
-  description = "Checksum of the iso file"
-  type        = string
-}
 
 variable "iso_file" {
   description = "Name of the iso file"

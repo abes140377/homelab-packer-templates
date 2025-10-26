@@ -2,6 +2,8 @@
 packer = "latest"
 
 [env]
+PROJECT_NAME = "{{ config_root | basename }}"
+
 _.file = [
   { path = "{{env.HOME}}/.env", optional = true },
   { path = ".env", optional = true },
@@ -10,6 +12,14 @@ _.file = [
 _.path = [
   "./scripts"
 ]
-# Map PROXMOX_* environment variables to Packer's PKR_VAR_* format
-PKR_VAR_proxmox_user = "{{env.PROXMOX_USERNAME}}"
-PKR_VAR_proxmox_token = "{{env.PROXMOX_TOKEN}}"
+
+[hooks]
+enter = [
+  'echo ""',
+  'echo "Setup $PROJECT_NAME project..."',
+  #
+  'mise i -q',
+  #
+  'echo "$ADMIN_PRIVATE_KEY" > keys/admin_id_ecdsa',
+  'chmod 600 keys/admin_id_ecdsa'
+]
