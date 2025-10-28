@@ -1,7 +1,8 @@
 {
   "permissions": {
     "allow": [
-      "Bash(./scripts/packer-build.sh:*)"
+      "Bash(cat:*)",
+      "Bash(test:*)"
     ],
     "deny": [],
     "ask": []

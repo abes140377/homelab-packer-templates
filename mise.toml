@@ -23,6 +23,6 @@ enter = [
   #
   'pre-commit install',
   #
-  'echo "$ADMIN_PRIVATE_KEY" > keys/admin_id_ecdsa',
+  'echo "$ADMIN_SSH_PRIVATE_KEY" > keys/admin_id_ecdsa',
   'chmod 600 keys/admin_id_ecdsa'
 ]

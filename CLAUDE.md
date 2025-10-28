@@ -80,10 +80,13 @@ Required after cloning or when plugin versions change.
 Using the helper script (recommended):
 
 ```bash
-# Validate and build (includes initialization)
-./scripts/homelab-packer build
+# Validate and build Ubuntu 24.04 template (includes initialization)
+./scripts/homelab-packer build 24.04
 
-# Only validate (includes initialization)
+# Validate and build Ubuntu 22.04 template (includes initialization)
+./scripts/homelab-packer build 22.04
+
+# Only validate configuration (includes initialization)
 ./scripts/homelab-packer validate
 
 # Create hashed password for user-data
@@ -93,7 +96,7 @@ Using the helper script (recommended):
 ./scripts/homelab-packer create-ssh-key <keyname> <email>
 ```
 
-The script automatically initializes Packer and uses `my.pkrvars.hcl` and `ubuntu-24.04.pkrvars.hcl` by default.
+The script automatically initializes Packer. For the `build` command, you must specify the Ubuntu version (e.g., `24.04` or `22.04`), which determines which `.pkrvars.hcl` file to use along with `my.pkrvars.hcl`.
 
 Manual build with custom variable files:
 
@@ -117,33 +120,50 @@ packer build \
 packer fmt -recursive .
 ```
 
+### Pre-commit Hooks
+
+This repository uses pre-commit for code quality checks. Hooks are automatically installed when entering the directory via mise:
+
+```bash
+# Manually run pre-commit on all files
+pre-commit run --all-files
+
+# Run pre-commit on staged files only
+pre-commit run
+```
+
+Pre-commit hooks are configured in `.pre-commit-config.yaml` and automatically installed via mise enter hooks.
+
 ## Required Environment Setup
 
 ### Mise Tool Configuration
 
 This project uses `mise` for tool version management (mise.toml):
 
-- Installs latest Packer
+- Installs latest Packer and pre-commit
 - Loads environment from `~/.env`, `.env`, and `.creds.env.yaml` (redacted)
 - Adds `./scripts` to PATH for easy access to homelab-packer script
-- Automatically exports `PROXMOX_USERNAME` as `PKR_VAR_proxmox_user`
-- Automatically exports `PROXMOX_TOKEN` as `PKR_VAR_proxmox_token`
-- On enter: Initializes mise and sets up SSH key from `ADMIN_PRIVATE_KEY` environment variable to `keys/admin_id_ecdsa`
+- On enter hooks:
+  - Initializes mise tools
+  - Installs pre-commit hooks
+  - Sets up SSH key from `ADMIN_SSH_PRIVATE_KEY` environment variable to `keys/admin_id_ecdsa`
 
 ### Credentials Configuration
 
 Create `.creds.env.yaml` (encrypted with SOPS) with Proxmox authentication and SSH keys:
 
 ```yaml
-PROXMOX_USERNAME: 'root@pam!token-id'
-PROXMOX_TOKEN: 'your-token-secret'
-ADMIN_PRIVATE_KEY: |
+PKR_VAR_proxmox_user: 'root@pam!token-id'
+PKR_VAR_proxmox_token: 'your-token-secret'
+ADMIN_SSH_PRIVATE_KEY: |
   -----BEGIN OPENSSH PRIVATE KEY-----
   your-private-key-content
   -----END OPENSSH PRIVATE KEY-----
 ```
 
-These variables are automatically mapped to Packer's expected format by mise.toml. The `ADMIN_PRIVATE_KEY` is written to `keys/admin_id_ecdsa` during mise activation.
+These variables are loaded by mise.toml:
+- `PKR_VAR_proxmox_user` and `PKR_VAR_proxmox_token` are automatically used by Packer (PKR_VAR_ prefix)
+- `ADMIN_SSH_PRIVATE_KEY` is written to `keys/admin_id_ecdsa` during mise activation
 
 ### Local Configuration
 
@@ -163,9 +183,10 @@ iso_storage_pool = "local"
 The repository uses SSH keys for the admin user created in templates:
 
 - Public key: `keys/admin_id_ecdsa.pub` - Must exist and is embedded in cloud-init user-data
-- Private key: `keys/admin_id_ecdsa` - Created from `ADMIN_PRIVATE_KEY` environment variable during mise activation
-- Keys directory is gitignored except for `.gitignore` and the public key
-- Use `./scripts/homelab-packer create-ssh-key admin user@example.com` to generate a new key pair
+- Private key: `keys/admin_id_ecdsa` - Created from `ADMIN_SSH_PRIVATE_KEY` environment variable during mise activation
+- Keys directory is gitignored except for `.gitignore` and `*.pub` files
+- Additional SSH keys can be stored in the `keys/` directory (e.g., `ansible_id_ecdsa.pub` for Ansible automation)
+- Use `./scripts/homelab-packer create-ssh-key <keyname> <email>` to generate a new key pair
 
 ## Key Variables
 
@@ -213,8 +234,8 @@ Credentials can be provided via environment variables (preferred) or direct vari
    - `provisioner` - Post-install cleanup commands (list of strings)
    - `additional_packages` - Extra packages to install (list of strings)
 4. Create autoinstall configuration in `http/<os>/` if required (Ubuntu uses `http/ubuntu/`)
-5. Update the `VAR_FILES` array in `scripts/homelab-packer` if you want it as default
-6. Build: `./scripts/homelab-packer build` or manually with `packer build -var-file="my.pkrvars.hcl" -var-file="new-os.pkrvars.hcl" .`
+5. Update the build case in `scripts/homelab-packer` to support your new version/OS
+6. Build: `./scripts/homelab-packer build <version>` or manually with `packer build -var-file="my.pkrvars.hcl" -var-file="new-os.pkrvars.hcl" .`
 
 ## File Organization
 
